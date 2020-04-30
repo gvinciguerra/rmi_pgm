@@ -7,6 +7,7 @@
 #include <iostream>
 #include <random>
 #include <chrono>
+#include <tuple>
 #include "rmis/wiki.h"
 #include "rmis/fb.h"
 #include "rmis/osm.h"
@@ -23,6 +24,21 @@ std::vector<std::string> DATASET_NAMES = {
   "data/wiki_ts_200M_uint64",
   "data/fb_200M_uint64"
 };
+
+template<class ForwardIt, class T, class Compare = std::less<T>>
+ForwardIt lower_bound_branchless(ForwardIt first, ForwardIt last, const T &value, Compare comp = Compare()) {
+    auto n = std::distance(first, last);
+
+    while (n > 1) {
+        auto half = n / 2;
+        __builtin_prefetch(&*first + half / 2, 0, 0);
+        __builtin_prefetch(&*first + half + half / 2, 0, 0);
+        first = comp(*std::next(first, half), value) ? first + half : first;
+        n -= half;
+    }
+
+    return std::next(first, comp(*first, value));
+}
 
 template<class T>
 void do_not_optimize(T const &value) {
@@ -122,12 +138,13 @@ void measure_perfomance() {
   }, queries);
 
   // Test lookups for PGM.
-  PGMIndex<uint64_t, 64> index(dataset);
+  //PGMIndex<uint64_t, 64> index(dataset);
+  PGMIndex<uint64_t, 32, 4> index(dataset);
   auto pgm_ns = query_time([&index, &dataset](auto x, auto correct_idx) {
     auto approx_range = index.find_approximate_position(x);
-    auto lb_result = std::lower_bound(dataset.begin() + approx_range.lo,
-                                      dataset.begin() + approx_range.hi,
-                                      x);
+    auto lb_result = lower_bound_branchless(dataset.begin() + approx_range.lo,
+                                            dataset.begin() + approx_range.hi,
+                                            x);
     
     size_t lb_position = std::distance(dataset.begin(), lb_result);
     if (lb_position != correct_idx) {
