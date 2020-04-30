@@ -3,7 +3,7 @@ These experiments complement the ones published in:
 
 > Paolo Ferragina and Giorgio Vinciguerra. [The PGM-index: a fully-dynamic compressed learned index with provable worst-case bounds](http://www.vldb.org/pvldb/vol13/p1162-ferragina.pdf). PVLDB, 13(8): 1162-1175, 2020.
 
-The content of `results.txt` on our machine is the following:
+The content of `results.txt`, ran on our machine with [PGMIndex<uint64_t, 32, 4>](https://github.com/gvinciguerra/rmi_pgm/blob/357acf668c22f927660d6ed11a15408f722ea348/main.cpp#L142) with a [branchless search](https://github.com/gvinciguerra/rmi_pgm/blob/357acf668c22f927660d6ed11a15408f722ea348/main.cpp#L145), is the following:
 
 ```
 CPU is:  Intel(R) Xeon(R) Gold 5118 CPU @ 2.30GHz
